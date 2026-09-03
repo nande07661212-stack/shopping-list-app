@@ -1,0 +1,10 @@
+.DS_Store
+Thumbs.db
+node_modules/
+
+# 로컬 도구 설정
+.claude/
+
+# 민감 정보 / 로컬 문서 (커밋 금지)
+API_Token_Github.docx
+*.pptx
