@@ -49,6 +49,12 @@
     </li>
   </template>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Supabase 프로젝트 설정 (publishable/anon 키는 클라이언트에 노출되어도 안전합니다 — RLS로 보호됨)
+    window.SUPABASE_URL = "https://ahhiklbbadaxklwqizgz.supabase.co";
+    window.SUPABASE_ANON_KEY = "sb_publishable_9eGTgdDECcIcU48DcqdHxQ_4j9BEzxB";
+  </script>
   <script src="app.js" defer></script>
 </body>
 </html>

@@ -1,12 +1,26 @@
 (() => {
   "use strict";
 
-  const STORAGE_KEY = "shopping-list.items";
-
   /** @typedef {{ id: string, text: string, checked: boolean }} Item */
 
+  const TABLE = "shopping_items";
+
+  const url = window.SUPABASE_URL;
+  const anonKey = window.SUPABASE_ANON_KEY;
+
+  if (!url || !anonKey || !window.supabase) {
+    console.error(
+      "[shopping-list] Supabase가 설정되지 않았습니다. index.html의 SUPABASE_URL / SUPABASE_ANON_KEY를 확인하세요."
+    );
+  }
+
+  const db =
+    url && anonKey && window.supabase
+      ? window.supabase.createClient(url, anonKey)
+      : null;
+
   /** @type {Item[]} */
-  let items = load();
+  let items = [];
 
   const form = document.getElementById("add-form");
   const input = document.getElementById("item-input");
@@ -16,66 +30,87 @@
   const clearCheckedBtn = document.getElementById("clear-checked");
   const template = document.getElementById("item-template");
 
-  function load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return [];
-      return parsed
-        .filter((it) => it && typeof it.text === "string")
-        .map((it) => ({
-          id: typeof it.id === "string" ? it.id : createId(),
-          text: it.text,
-          checked: Boolean(it.checked),
-        }));
-    } catch (err) {
-      console.warn("[shopping-list] load failed:", err);
-      return [];
+  async function load() {
+    if (!db) return;
+    const { data, error } = await db
+      .from(TABLE)
+      .select("id, text, checked")
+      .order("created_at", { ascending: true });
+    if (error) {
+      console.error("[shopping-list] load failed:", error);
+      return;
     }
+    items = (data || []).map((it) => ({
+      id: String(it.id),
+      text: it.text,
+      checked: Boolean(it.checked),
+    }));
+    render();
   }
 
-  function save() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch (err) {
-      console.warn("[shopping-list] save failed:", err);
-    }
-  }
-
-  function createId() {
-    if (window.crypto && typeof window.crypto.randomUUID === "function") {
-      return window.crypto.randomUUID();
-    }
-    return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  }
-
-  function addItem(text) {
+  async function addItem(text) {
     const trimmed = text.trim();
-    if (!trimmed) return;
-    items.push({ id: createId(), text: trimmed, checked: false });
-    save();
+    if (!trimmed || !db) return;
+    const { data, error } = await db
+      .from(TABLE)
+      .insert({ text: trimmed, checked: false })
+      .select("id, text, checked")
+      .single();
+    if (error) {
+      console.error("[shopping-list] add failed:", error);
+      return;
+    }
+    items.push({
+      id: String(data.id),
+      text: data.text,
+      checked: Boolean(data.checked),
+    });
     render();
   }
 
-  function toggleItem(id) {
+  async function toggleItem(id) {
     const item = items.find((it) => it.id === id);
-    if (!item) return;
-    item.checked = !item.checked;
-    save();
+    if (!item || !db) return;
+    const next = !item.checked;
+    item.checked = next;
     render();
+    const { error } = await db
+      .from(TABLE)
+      .update({ checked: next })
+      .eq("id", id);
+    if (error) {
+      console.error("[shopping-list] toggle failed:", error);
+      item.checked = !next;
+      render();
+    }
   }
 
-  function deleteItem(id) {
+  async function deleteItem(id) {
+    if (!db) return;
+    const prev = items;
     items = items.filter((it) => it.id !== id);
-    save();
     render();
+    const { error } = await db.from(TABLE).delete().eq("id", id);
+    if (error) {
+      console.error("[shopping-list] delete failed:", error);
+      items = prev;
+      render();
+    }
   }
 
-  function clearChecked() {
+  async function clearChecked() {
+    if (!db) return;
+    const checkedIds = items.filter((it) => it.checked).map((it) => it.id);
+    if (checkedIds.length === 0) return;
+    const prev = items;
     items = items.filter((it) => !it.checked);
-    save();
     render();
+    const { error } = await db.from(TABLE).delete().in("id", checkedIds);
+    if (error) {
+      console.error("[shopping-list] clearChecked failed:", error);
+      items = prev;
+      render();
+    }
   }
 
   function render() {
@@ -130,4 +165,5 @@
   clearCheckedBtn.addEventListener("click", clearChecked);
 
   render();
+  load();
 })();
