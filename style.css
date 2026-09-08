@@ -273,11 +273,11 @@ body {
   text-decoration-thickness: 1.5px;
 }
 
+.list__edit,
 .list__delete {
   flex-shrink: 0;
   width: 30px;
   height: 30px;
-  font-size: 1.3rem;
   line-height: 1;
   color: var(--text-muted);
   background: transparent;
@@ -287,14 +287,46 @@ body {
   transition: color 0.16s ease, background-color 0.16s ease;
 }
 
+.list__edit {
+  font-size: 0.95rem;
+}
+
+.list__delete {
+  font-size: 1.3rem;
+}
+
+.list__edit:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
 .list__delete:hover {
   color: var(--danger);
   background: var(--danger-soft);
 }
 
+.list__edit:focus-visible,
 .list__delete:focus-visible {
   outline: none;
   box-shadow: var(--ring);
+}
+
+/* 수정 중인 항목의 인라인 입력 */
+.list__edit-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 0.98rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--ring);
+}
+
+.list__edit-input:focus {
+  outline: none;
 }
 
 /* ===== 빈 상태 ===== */
