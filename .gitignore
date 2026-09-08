@@ -4,7 +4,11 @@ node_modules/
 
 # 로컬 도구 설정
 .claude/
+.playwright-mcp/
 
 # 민감 정보 / 로컬 문서 (커밋 금지)
 API_Token_Github.docx
 *.pptx
+
+# 작업 중 생성된 첨부 파일 (앱 소스 아님)
+shopping-list-final-state.png

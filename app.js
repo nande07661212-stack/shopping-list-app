@@ -3,7 +3,7 @@
 
   /** @typedef {{ id: string, text: string, checked: boolean }} Item */
 
-  const TABLE = "shopping_items";
+  const TABLE = "shopping_items_2";
 
   const url = window.SUPABASE_URL;
   const anonKey = window.SUPABASE_ANON_KEY;
